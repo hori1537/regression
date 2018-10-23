@@ -58,7 +58,7 @@ desktop_path =  os.getenv("HOMEDRIVE") + os.getenv("HOMEPATH") + "\\Desktop"
 os.chdir(desktop_path)
 
 # name of theme name
-theme_name = '8ken-20181015'
+theme_name = '8ken-20181016-2'
 
 # outputs of dataset
 #address_ = 'C:/Users/1310202/Desktop/20180921/horie/data_science/for8ken/'
@@ -66,6 +66,7 @@ address_ = 'D:/8ken/'
 
 # Graphviz path
 graphviz_path = 'C:\\Program Files (x86)\\Graphviz2.38\\bin\\dot.exe'
+#graphviz_path = 'C:\\Users\\1310202\\Desktop\\software\\graphviz-2.38\\release\\bin\\dot.exe'
 
 save_address = desktop_path + 'ML'
 
@@ -92,73 +93,31 @@ if os.path.exists(address_) == False:
     print('no exist ', address_)
 
 # make the save folder
-
 print('makedir ', 'ML')
 
 save_address = 'ML\\' + theme_name +'\\'
 
 def chk_mkdir(paths):
-    for path in paths:
-        if os.path.exists(path) == False:
-            os.mkdir(path)
+    for path_name in paths:
+        if os.path.exists(path_name) == False:
+            os.mkdir(path_name)
     return
     
 
-paths = (['ML','ML\\' + theme_name, 
+paths = [ 'ML',
+          'ML\\' + theme_name, 
           'ML\\' + theme_name + '\\sklearn', 
           'ML\\' + theme_name + '\\sklearn\\tree', 
           'ML\\' + theme_name + '\\sklearn\\importance',
           'ML\\' + theme_name + '\\sklearn\\parameter',
           'ML\\' + theme_name + '\\sklearn\\predict',
+          'ML\\' + theme_name + '\\sklearn\\traintest',
           'ML\\' + theme_name + '\\deeplearning',
           'ML\\' + theme_name + '\\deeplearning\\h5',
           'ML\\' + theme_name + '\\deeplearning\\traintest',
-          'ML\\' + theme_name + '\\deeplearing\\predict'])
+          'ML\\' + theme_name + '\\deeplearning\\predict']
 
 chk_mkdir(paths)
-
-'''
-try:
-    if os.path.exists('ML') == False:
-        os.mkdir(     'ML')
-
-    if os.path.exists('ML\\' + theme_name) == False:
-        os.mkdir(     'ML\\' + theme_name)
-
-    if os.path.exists('ML\\' + theme_name + '\\sklearn') == False:
-        os.mkdir(     'ML\\' + theme_name + '\\sklearn')
-    if os.path.exists('ML\\' + theme_name + '\\sklearn\\tree') == False:
-        os.mkdir(     'ML\\' + theme_name + '\\sklearn\\tree')
-        
-    if os.path.exists('ML\\' + theme_name + '\\sklearn\\importance') == False:            
-        os.mkdir(     'ML\\' + theme_name + '\\sklearn\\importance')
-        
-    if os.path.exists('ML\\' + theme_name + '\\sklearn\\traintest') == False:            
-        os.mkdir(     'ML\\' + theme_name + '\\sklearn\\traintest')
-
-    if os.path.exists('ML\\' + theme_name + '\\sklearn\\parameter') == False:            
-        os.mkdir(     'ML\\' + theme_name + '\\sklearn\\parameter')
-
-    if os.path.exists('ML\\' + theme_name + '\\sklearn\\predict') == False:            
-        os.mkdir(     'ML\\' + theme_name + '\\sklearn\\predict')        
-    
-    if os.path.exists('ML\\' + theme_name + '\\deeplearning') == False:
-        os.mkdir(     'ML\\' + theme_name + '\\deeplearning')
-        
-    if os.path.exists('ML\\' + theme_name + '\\deeplearning\\h5') == False:
-        os.mkdir(     'ML\\' + theme_name + '\\deeplearning\\h5')
-        
-    if os.path.exists('ML\\' + theme_name + '\\deeplearning\\traintest') == False:            
-        os.mkdir(     'ML\\' + theme_name + '\\deeplearning\\traintest')
-
-    if os.path.exists('ML\\' + theme_name + '\\deeplearing\\predict') == False:            
-        os.mkdir(     'ML\\' + theme_name + '\\deeplearning\\predict')     
-
-except:
-    print("Failed to mkdir")
-'''
-
-
 os.chdir('ML')
 os.chdir(theme_name)
 
@@ -183,13 +142,13 @@ output_min  = output_des.loc['min']
 info_feature_names  = info_df.columns
 input_feature_names = input_df.columns
 output_feature_names= output_df.columns
-output_predict_feature_names = list(map(lambda x:x + '-predict' , output_feature_names))
+predict_output_feature_names = list(map(lambda x:x + '-predict' , output_feature_names))
 
 
 chkprint(info_feature_names)
 chkprint(input_feature_names)
 chkprint(output_feature_names)
-chkprint(output_predice_feature_names)
+chkprint(predict_output_feature_names)
 
 from sklearn.preprocessing import StandardScaler
 all_sc_model    = StandardScaler()
@@ -203,25 +162,59 @@ output_std_df   = output_sc_model.fit_transform(output_df)
 
 # split train data and test data from the raw_data_std_df
 train_std_df, test_std_df = train_test_split(raw_data_std_df, test_size=0.1)
-# transform from pandas dataframe to numpy array
-train_np = np.array(train_std_df)
-test_np  = np.array(test_std_df)
+train_df, test_df = train_test_split(raw_data_df, test_size=0.1)
 
+# transform from pandas dataframe to numpy array
+train_np = np.array(train_df)
+test_np  = np.array(test_df)
+train_std_np = np.array(train_std_df)
+test_std_np  = np.array(test_std_df)
 
 # detect the outliner by OneClassSVM      not use now
 from sklearn.svm import OneClassSVM
 ocsvm  = OneClassSVM(nu=0.01)
 
 # split columns to info, input, output
-[info_train, input_train, output_train] = np.hsplit(train_np, [info_col, input_col])
-[info_test,  input_test,  output_test] = np.hsplit(test_np,  [info_col, input_col])
+[train_info, train_input, train_output] = np.hsplit(train_np, [info_col, input_col])
+[test_info,  test_input,  test_output]  = np.hsplit(test_np,  [info_col, input_col])
 
-train_input_df  = pd.DataFrame(input_train, columns = input_feature_names)
-test_input_df   = pd.DataFrame(input_test,  columns = input_feature_names)
+[train_info, train_input_std, train_output_std] = np.hsplit(train_std_np, [info_col, input_col])
+[test_info,  test_input_std,  test_output_std]  = np.hsplit(test_std_np,  [info_col, input_col])
 
-train_output_df = pd.DataFrame(output_train,columns = output_feature_names)
-test_output_df  = pd.DataFrame(output_test, columns = output_feature_names)
+train_input_df  = pd.DataFrame(train_input, columns = input_feature_names)
+test_input_df   = pd.DataFrame(test_input,  columns = input_feature_names)
+train_output_df = pd.DataFrame(train_output,columns = output_feature_names)
+test_output_df  = pd.DataFrame(test_output, columns = output_feature_names)
 
+train_input_std_df  = pd.DataFrame(train_input_std, columns = input_feature_names)
+test_input_std_df   = pd.DataFrame(test_input_std,  columns = input_feature_names)
+train_output_std_df = pd.DataFrame(train_output_std,columns = output_feature_names)
+test_output_std_df  = pd.DataFrame(test_output_std, columns = output_feature_names)
+
+
+# select the feature value by the random forest regressor
+
+max_depth = 7
+model = sklearn.ensemble.RandomForestRegressor(max_depth = max_depth)
+model_name = ''
+model_name += 'RandomForestRegressor_'
+model_name += 'max_depth_'+str(max_depth)
+
+model.fit(train_input, train_output)
+importances = np.array(model.feature_importances_)
+importances_sort = importances.argsort()[::-1]
+split_base  = np.array([20,15,13,7,5,3,2,2])
+
+# set the split num from importances rank of random forest regressor
+split_num   = np.full(len(importances_sort),1)
+chkprint(split_num)
+chkprint(split_base)
+for i in range(len(importances)):
+    rank_ = importances_sort[i]
+    chkprint(rank_)
+    split_num[rank_] = split_base[i]
+
+chkprint(split_num)
 
 
 def combination(max, min, split_num):
@@ -235,25 +228,16 @@ def combination(max, min, split_num):
 
 if is_gridsearch == True:
 
-    ### the split num of grid search candidate
-    split_num = np.full((input_num), 3)
+    ### manual setting of the split num of grid search candidate
+    
+    #split_num = np.full((input_num), 2)
     #split_num = np.array([1, 1, 1, 2, 3, 4])
-    
-    candidate = combination(input_max,input_min, split_num)
+    all_gridsearch_number = split_num.prod()
+    chkprint(all_gridsearch_number)
 
-    # refer from https://teratail.com/questions/152110
-    # unpack   *candidate
-    input_iter = list(itertools.product(*candidate))
-    input_iter_df = pd.DataFrame(input_iter, columns = input_feature_names)
-    input_iter_std = input_sc_model.transform(input_iter)
-    input_iter_std_df = pd.DataFrame(input_iter_std, columns = input_feature_names)
-    
-    all_iter_number = sum(len(i) for i in input_iter)
-    chkprint(all_iter_number)
-
-    if all_iter_number>10**7:
+    if all_gridsearch_number>10**7:
         print('so much candidate')
-        print('Do you really want to predict ', all_iter_number, ' candidate? y/n')
+        print('Do you really want to predict ', all_gridsearch_number, ' candidate? y/n')
         answer = input()
         if answer in ['yes','ye','y']:
             print('ok lets start')
@@ -261,14 +245,29 @@ if is_gridsearch == True:
             print('exit the program')
             sys.exit()
 
-    if all_iter_number>10**10:
+    if all_gridsearch_number>10**10:
         print('but, too much candidate')
         print('exit the program')
         sys.exit()
 
+
+    candidate = combination(input_max, input_min, split_num)
+
+    # refer from https://teratail.com/questions/152110
+    # unpack   *candidate
+    gridsearch_input        = list(itertools.product(*candidate))
+    gridsearch_input_std    = input_sc_model.transform(gridsearch_input)
+
+    gridsearch_input_df     = pd.DataFrame(gridsearch_input, columns = input_feature_names)
+    gridsearch_input_std_df = pd.DataFrame(gridsearch_input_std, columns = input_feature_names)
+    
+    #all_gridsearch_number = sum(len(i) for i in gridsearch_input)
+    #chkprint(all_gridsearch_number)
+
+
     ############### iterate the all candidate #######################
-    #input_iter = list(itertools.product(xpot_candidate, ypot_candidate, tend_candidate, tside_candidate, tmesh_candidate, hter_candidate))
-    #input_iter = np.reshape(input_iter,[candidate_number, input_col])
+    #gridsearch_input = list(itertools.product(xpot_candidate, ypot_candidate, tend_candidate, tside_candidate, tmesh_candidate, hter_candidate))
+    #gridsearch_input = np.reshape(gridsearch_input,[candidate_number, input_col])
     ###########################################################################
 
 
@@ -304,22 +303,22 @@ def tree_to_code(tree, feature_names):
 
 #########   predict of all candidate by the scikitlearn model ###############
 
-def iter_predict(model, model_name, input_iter_std):
+def gridsearch_predict(model, model_name):        
     start_time = time.time()
 
-    iter_predict_std_df = pd.DataFrame(model.predict(input_iter_std), columns = output_predict_feature_names)
-    iter_predict_df = pd.DataFrame(output_sc_model.inverse_transform(iter_predict_std_df), columns = output_predict_feature_names)
+    gridsearch_predict_std_df   = pd.DataFrame(model.predict(gridsearch_input_std), columns = predict_output_feature_names)
+    gridsearch_predict_df       = pd.DataFrame(output_sc_model.inverse_transform(gridsearch_predict_std_df), columns = predict_output_feature_names)
 
     end_time = time.time()
     total_time = end_time - start_time
     print(model_name, ' ' , total_time)
 
-    iter_predict_df['Tmax-'] = iter_predict_df.max(axis = 1)
-    iter_predict_df['Tdelta-'] = iter_predict_df.min(axis = 1)
-    iter_predict_df['Tmin-'] = iter_predict_df['Tmax-'] - iter_predict_df['Tdelta-']
+    gridsearch_predict_df['Tmax-']      = gridsearch_predict_df.max(axis = 1)
+    gridsearch_predict_df['Tdelta-']    = gridsearch_predict_df.min(axis = 1)
+    gridsearch_predict_df['Tmin-']      = gridsearch_predict_df['Tmax-'] - gridsearch_predict_df['Tdelta-']
     
-    iter_predict_df = pd.concat([input_iter_df, iter_predict_df], axis = 1)
-    iter_predict_df.to_csv('sklearn/predict/' + str(model_name) + '_predict.csv')
+    gridsearch_predict_df = pd.concat([gridsearch_input_df, gridsearch_predict_df], axis = 1)
+    gridsearch_predict_df.to_csv('sklearn/predict/' + str(model_name) + '_predict.csv')
 
     return
 
@@ -329,43 +328,63 @@ columns_results = ['model_name', 'train_model_mse', 'train_model_rmse', 'test_mo
 allmodel_results_df = pd.DataFrame(columns = columns_results)
 print(allmodel_results_df)
     
-def regression(model, model_name, input_train, output_train):
+def regression(model, model_name, train_input_std, test_input_std):
+
+    start_time = time.time()
+
+    model.fit(train_input_std, train_output_std)
+
+    save_regression(model, model_name, train_input_std, test_input_std)
+
+    return
+
+
+def save_regression(model, model_name, train_input_std, test_input_std):
     global allmodel_results_df
+
+    train_output_predict_std    = model.predict(train_input_std)
+    test_output_predict_std     = model.predict(test_input_std)
+    train_output_predict        = output_sc_model.inverse_transform(train_output_predict_std)
+    test_output_predict         = output_sc_model.inverse_transform(test_output_predict_std)
+
+    if hasattr(model, 'score') == True:
+        train_model_score   = model.score(train_input_std , train_output_std)
+        train_model_score   = np.round(train_model_score,3)
+        test_model_score    = model.score(test_input_std,   test_output_std)
+        test_model_score    = np.round(test_model_score,3)
+    if hasattr(model, 'evaluate') == True:
+        train_model_score   = model.evaluate(train_input_std , train_output_std)
+        train_model_score   = np.round(train_model_score,3)
+        test_model_score    = model.evaluate(test_input_std,   test_output_std)
+        test_model_score    = np.round(test_model_score,3)
+
+    train_output_predict_df = pd.DataFrame(train_output_predict, columns = predict_output_feature_names)
+    train_result_df         = pd.concat([train_input_df, train_output_predict_df, train_output_df], axis=1)
+
+    test_output_predict_df  = pd.DataFrame(test_output_predict, columns = predict_output_feature_names)
+    test_result_df          = pd.concat([train_input_df, test_output_predict_df, train_output_df], axis=1)
     
-    model.fit(input_train, output_train)
+    train_model_mse     = sklearn.metrics.mean_squared_error(train_output_std, train_output_predict_std)
+    train_model_rmse    = np.sqrt(train_model_mse)
+    test_model_mse      = sklearn.metrics.mean_squared_error(test_output_std, test_output_predict_std)
+    test_model_rmse     = np.sqrt(test_model_mse)
     
-    train_model_mse = sklearn.metrics.mean_squared_error(output_train, model.predict(input_train))
-    train_model_rmse = np.sqrt(train_model_mse)
-    test_model_mse = sklearn.metrics.mean_squared_error(output_test, model.predict(input_test))
-    test_model_rmse = np.sqrt(test_model_mse)
-    train_model_score = model.score(input_train , output_train)
-    train_model_score = np.round(train_model_score,3)
-    test_model_score  = model.score(input_test,   output_test)
-    test_model_score  = np.round(test_model_score,3)
-    
+
     results_df = pd.DataFrame([model_name, train_model_mse, train_model_rmse, test_model_mse, test_model_rmse, train_model_score, test_model_score]).T
     results_df.columns = columns_results
     allmodel_results_df = pd.concat([allmodel_results_df, results_df])
-    params_df = pd.DataFrame([model.get_params])
-    
 
     
-    train_model_predict_df = pd.DataFrame(model.predict(input_train), columns = output_predict_feature_names)
-    train_model_df = pd.concat([train_input_df, train_model_predict_df, train_output_df], axis=1)
-
-    test_model_predict_df = pd.DataFrame(model.predict(input_test), columns = output_predict_feature_names)
-    test_model_df = pd.concat([test_input_df, test_model_predict_df, test_output_df], axis=1)
-
     model_name += get_variablename(train_model_score,test_model_score)
     
     chkprint(model_name)
     
-    train_model_df.to_csv('sklearn/traintest/' + str(model_name) + '_train.csv')
-    test_model_df.to_csv('sklearn/traintest/' + str(model_name) + '_test.csv')
+    #train_result_df.to_csv('sklearn/traintest/' + str(model_name) + '_train.csv')
+    #test_result_df.to_csv('sklearn/traintest/' + str(model_name) + '_test.csv')
     
     if hasattr(model, 'get_params') == True:
         model_params          = model.get_params()
-        #print(model_params)
+        params_df = pd.DataFrame([model.get_params])
     
     if hasattr(model, 'intercept_') == True &  hasattr(model, 'coef_') == True:
         model_intercept_df    = pd.DataFrame(model.intercept_)
@@ -375,8 +394,6 @@ def regression(model, model_name, input_train, output_train):
         
     if hasattr(model, 'tree_') == True:
         #tree_to_code(model, [input_feature_names])
-
-
         dot_data = StringIO()
         sklearn.tree.export_graphviz(model, out_file=dot_data, feature_names=input_feature_names)
         graph = pydotplus.graph_from_dot_data(dot_data.getvalue())
@@ -392,21 +409,24 @@ def regression(model, model_name, input_train, output_train):
     if hasattr(model, 'feature_importances_') == True:
 
         importances = pd.Series(model.feature_importances_)
-        label       = input_feature_names
-        #print(importances)
-        
-        plt.bar(label, importances)
+        importances = np.array(importances)
+        print(importances)
         #importances = importances.sort_values()
-        #importances.plot(kind = "barh")
         
-        plt.title("importance in the tree Model")
-        #plt.show()
-        #plt.bar(tick_label = label)
-        plt.savefig('sklearn/importance/' + str(model_name)  + '.png')
+        label       = input_feature_names
+        plt.bar(label, importances)
+        
+        plt.xticks(rotation=90)
+        plt.xticks(fontsize=8)
+        plt.rcParams["font.size"] = 12
 
-    # call iter_predict 
+        plt.title("importance in the tree " + str(theme_name))
+        #plt.show()
+        plt.savefig('sklearn/importance/' + str(model_name)  + '.png', dpi = 240)
+
+    # call gridsearch_predict 
     if is_gridsearch == True:
-        iter_predict(model,model_name, input_iter_std)
+        gridsearch_predict(model, model_name)
     
     return
 
@@ -417,7 +437,7 @@ model = linear_model.LinearRegression()
 
 model_name = 'linear_regression_'
 
-regression(model, model_name, input_train,output_train)
+regression(model, model_name, train_input_std, test_input_std)
 
 ##################### Regression of Stochastic Gradient Descent ##################### 
 max_iter = 1000
@@ -427,7 +447,7 @@ model_name = 'Stochastic Gradient Descent_'
 model_name += 'max_iter_'+str(max_iter)
 
 
-#regression(model, model_name, input_train,output_train)
+regression(model, model_name, train_input_std, test_input_std)
 
 
 ##################### Regression of SVR #####################
@@ -439,7 +459,7 @@ model_name = 'SupportVectorRegressor_'
 model_name += 'kernel_'+str(kernel_)
 model_name += 'C_'+str(C_)
 
-#regression(model, model_name, input_train,output_train)
+regression(model, model_name, train_input_std, test_input_std)
 
 ##################### Regression of Ridge #####################
 alpha_ = 1.0
@@ -447,7 +467,7 @@ model = linear_model.Ridge(alpha = alpha_)
 model_name = 'Ridge_'
 model_name += 'alpha_'+str(alpha_)
 
-regression(model, model_name, input_train,output_train)
+regression(model, model_name, train_input_std, test_input_std)
 
 
 ##################### Regression of Lasso #####################
@@ -456,7 +476,7 @@ model = linear_model.Lasso(alpha = alpha_)
 model_name = 'Lasso_'
 model_name += 'alpha_'+str(alpha_)
 
-regression(model, model_name, input_train,output_train)
+regression(model, model_name, train_input_std, test_input_std)
 
 
 ##################### Regression of Elastic Net #####################
@@ -467,8 +487,7 @@ model_name = 'ElasticNet_'
 model_name += 'alpha_'+str(alpha_)
 model_name += 'l1_ratio_'+str(l1_ratio_)
 
-
-regression(model, model_name, input_train,output_train)
+regression(model, model_name, train_input_std, test_input_std)
 
 
 ##################### Regression of MultiTaskLassoCV #####################
@@ -477,7 +496,7 @@ model = linear_model.MultiTaskLassoCV()
 model_name = 'MTLasso_'
 model_name += 'max_iter_'+str(max_iter)
 
-regression(model, model_name, input_train,output_train)
+regression(model, model_name, train_input_std, test_input_std)
 
 ##################### Regression of Multi Task Elastic Net CV #####################
 model = linear_model.MultiTaskElasticNetCV()
@@ -489,19 +508,19 @@ model_name = 'MTElasticNet_'
 model = linear_model.OrthogonalMatchingPursuit()
 model_name = 'BayesianRidge_'
 
-regression(model, model_name, input_train,output_train)
+regression(model, model_name, train_input_std, test_input_std)
 
 ##################### Regression of BayesianRidge #####################
 model = MultiOutputRegressor(linear_model.BayesianRidge())
 model_name = 'BayesianRidge_'
 
-regression(model, model_name, input_train, output_train)
+regression(model, model_name, train_input_std, test_input_std)
 
 ##################### Regression of PassiveAggressiveRegressor #####################
 #model = MultiOutputRegressor(linear_model.PassiveAggressiveRegressor())
 #model_name = 'PassiveAggressiveRegressor_'
 
-#regression(model, model_name, input_train,output_train)
+#regression(model, model_name, train_input,train_output)
 
 ##################### Regression of PolynomialFeatures #####################
 '''
@@ -518,7 +537,7 @@ for degree in [2]:
     model_name = 'PolynomialFeatures_'
     model_name += 'degree_' + str(degree)
     
-    regression(model, model_name, input_train,output_train)
+    regression(model, model_name, train_input,train_output)
 '''
 
 ##################### Regression ofGaussianProcessRegressor #####################
@@ -528,7 +547,7 @@ from sklearn.gaussian_process import GaussianProcessRegressor
 model = MultiOutputRegressor(GaussianProcessRegressor())
 model_name = 'GaussianProcessRegressor_'
     
-regression(model, model_name, input_train,output_train)
+regression(model, model_name, train_input,train_output)
 '''
 
 ##################### Regression of GaussianNB #####################
@@ -539,7 +558,7 @@ from sklearn.naive_bayes import GaussianNB
 model = MultiOutputRegressor(GaussianNB())
 model_name = 'GaussianNB_'
 
-regression(model, model_name, input_train,output_train)
+regression(model, model_name, train_input,train_output)
 '''
 ##################### Regression of GaussianNB #####################
 '''
@@ -548,7 +567,7 @@ from sklearn.naive_bayes import  ComplementNB
 model = ComplementNB()
 model_name = 'ComplementNB_'
     
-regression(model, model_name, input_train,output_train)
+regression(model, model_name, train_input,train_output)
 '''
 ##################### Regression of MultinomialNB #####################
 '''
@@ -556,7 +575,7 @@ from sklearn.naive_bayes import MultinomialNB
 model = MultinomialNB()
 model_name = 'MultinomialNB_'
     
-regression(model, model_name, input_train,output_train)
+regression(model, model_name, train_input,train_output)
 '''
 
 ##################### Regression of DecisionTreeRegressor #####################
@@ -565,7 +584,7 @@ for max_depth in [4,5,6,7,8,9]:
     model_name = 'DecisionTreeRegressor_'    
     model_name += 'max_depth_'+str(max_depth)
 
-    regression(model, model_name, input_train, output_train)
+    regression(model, model_name, train_input_std, test_input_std)
 
 #################### Regression of RandomForestRegressor #####################
 for max_depth in [4,5,6,7,8,9]:
@@ -575,7 +594,7 @@ for max_depth in [4,5,6,7,8,9]:
     #model_name += get_variablename(max_depth)
     model_name += 'max_depth_'+str(max_depth)
     
-    regression(model, model_name, input_train, output_train)
+    regression(model, model_name, train_input_std, test_input_std)
 
 ##################### Regression of XGBoost #####################
 # refer from https://github.com/FelixNeutatz/ED2/blob/23170b05c7c800e2d2e2cf80d62703ee540d2bcb/src/model/ml/CellPredict.py
@@ -602,18 +621,13 @@ for estimator__min_child_weight, estimator__subsample, estimator__learning_rate,
     model = MultiOutputRegressor(xgb.XGBRegressor(**xgb_params))
     
     model_name = 'XGBoost'
-    #model_name += get_variablename(estimator__min_child_weight)
-    #model_name += get_variablename(estimator__subsample)
-    #model_name += get_variablename(estimator__learning_rate)
-    #model_name += get_variablename(estimator__max_depth)
-    #model_name += get_variablename(estimator__n_estimators)
     model_name += 'min_child_weight_'+str(estimator__min_child_weight)
     model_name += 'subsample_'+str(estimator__subsample)
     model_name += 'learning_rate_'+str(estimator__learning_rate)
     model_name += 'max_depth_'+str(estimator__max_depth)
     model_name += 'n_estimators_'+str(estimator__n_estimators)
-    
-    regression(model, model_name, input_train, output_train)
+
+    regression(model, model_name, train_input_std, test_input_std)
 
 
 
@@ -645,9 +659,9 @@ plt.show()
 import lime
 import lime.lime_tabular
 
-#explainer1 = lime.lime_tabular.LimeTabularExplainer(output_train, feature_names=input_feature_names, kernel_width=3)
+#explainer1 = lime.lime_tabular.LimeTabularExplainer(train_output, feature_names=input_feature_names, kernel_width=3)
 0
-explainer1 = lime.lime_tabular.LimeTabularExplainer(input_train, feature_names= input_feature_names, class_names=output_feature_names, verbose=True, mode='regression')
+explainer1 = lime.lime_tabular.LimeTabularExplainer(train_input, feature_names= input_feature_names, class_names=output_feature_names, verbose=True, mode='regression')
 
 np.random.seed(1)
 i = 3
@@ -673,10 +687,10 @@ exp.save_to_file(file_path=str(address_) + 'numeric_category_feat_02', show_tabl
 # pickle.dump(reg, open("model.pkl", "wb"))
 # reg = pickle.load(open("model.pkl", "rb"))
 
-pred1_train = reg1_gbtree.predict(input_train)
-pred1_test = reg1_gbtree.predict(input_test)
-print(mean_squared_error(output_train, pred1_train))
-print(mean_squared_error(output_test, pred1_test))
+pred1_train = reg1_gbtree.predict(train_input)
+pred1_test = reg1_gbtree.predict(test_input)
+print(mean_squared_error(train_output, pred1_train))
+print(mean_squared_error(test_output, pred1_test))
 
 import matplotlib.pyplot as plt
 
@@ -747,26 +761,36 @@ def get_model(num_layers, layer_size,bn_where,ac_last,keep_prob, patience):
 
     return model
 
+def get_model2(num_layers, layer_size,bn_where,ac_last,keep_prob, patience):
+    model = Sequential()
+    model.add(Dense(input_num, input_dim = input_num, activation = 'relu'))
 
+    for i in range(num_layers):
+        model.add(Dense(layer_size, activation = 'relu'))
+    
+    model.add(BatchNormalization(mode=0))
+    model.add(Dense(output_num))
 
+    model.compile(loss = 'mean_squared_error', optimizer = 'adam')
 
+    return model
 # refre from https://github.com/completelyAbsorbed/ML/blob/0ca17d25bae327fe9be8e3639426dc86f3555a5a/Practice/housing/housing_regression_NN.py
 
 
-num_layers  = [4, 3, 2]
-layer_size  = [1024, 512, 256, 128, 64, 32, 16]
-bn_where    = [3, 0, 1, 2]
+num_layers  = [4,5]
+layer_size  = [64, 32, 16]
+bn_where    = [3, 0]
 ac_last     = [0, 1]
-keep_prob   = [0, 0.2]
+keep_prob   = [0]
 patience    = [3000]
 
-
+'''
 for dp_params in itertools.product(num_layers, layer_size, bn_where, ac_last, keep_prob, patience):
     num_layers, layer_size, bn_where, ac_last, keep_prob, patience = dp_params
     
     batch_sixe  = 30
     nb_epochs   = 10000
-    cb = callbacks.EarlyStopping(monitor = 'loss'   , min_delta = 0,
+    cb = keras.callbacks.EarlyStopping(monitor = 'loss'   , min_delta = 0,
                                  patience = patience, mode = 'auto')
                                  
     model = KerasRegressor(build_fn = get_model(*dp_params), nb_epoch=5000, batch_size=5, verbose=0, callbacks=[cb])
@@ -777,23 +801,18 @@ for dp_params in itertools.product(num_layers, layer_size, bn_where, ac_last, ke
     model_name +=  '_bn- '            + str(bn_where)
     model_name +=  '_ac-'             + str(ac_last)
     model_name +=  '_k_p-'            + str(keep_prob)
-    model_name +=  '_patience-'       + str(patience_)
+    model_name +=  '_patience-'       + str(patience)
     
-    regression(model, model_name, input_train, output_train)
-
-
-
+    regression(model, model_name, train_input, train_output)
+'''
 
 
 allmodel_results_df.to_csv('comparison of methods.csv')
 
+epochs = 100000
+batch_size = 32
 
-
-
-
-
-
-for patience_ in [3000]:
+for patience_ in [100,3000]:
 
     es_cb = keras.callbacks.EarlyStopping(monitor='val_loss', patience=patience_, verbose=0, mode='auto')
 
@@ -804,7 +823,8 @@ for patience_ in [3000]:
                     for ac_last in [0,1]:
                         for keep_prob in [0,0.1,0.2]:
 
-                            model =get_model(num_layers,layer_size,bn_where,ac_last,keep_prob)
+                            model =get_model(num_layers,layer_size,bn_where,ac_last,keep_prob, patience)
+                            #model = KerasRegressor(build_fn = model, epochs=5000, batch_size=5, verbose=0, callbacks=[es_cb])
 
                             if layer_size >= 1024:
                                 batch_size = 30
@@ -816,24 +836,39 @@ for patience_ in [3000]:
                             else:
                                 batch_size = 30
 
+                            model_name = "deeplearning"
+                            model_name +=  '_numlayer-'       + str(num_layers)
+                            model_name +=  '_layersize-'      + str(layer_size)
+                            model_name +=  '_bn- '            + str(bn_where)
+                            model_name +=  '_ac-'             + str(ac_last)
+                            model_name +=  '_k_p-'            + str(keep_prob)
+                            model_name +=  '_pat-'       + str(patience_)
 
-                            model.fit(input_train, output_train,
+                            regression(model, model_name, train_input_std, test_input_std)
+
+
+
+                            
+                            model.fit(train_input, train_output,
                                       batch_size=batch_size,
                                       epochs=epochs,
                                       verbose=1,
-                                      validation_data=(input_test, output_test),
+                                      validation_data=(test_input, test_output),
                                       callbacks=[es_cb])
-
-                            score_test = model.evaluate(input_test, output_test, verbose=1)
-                            score_train = model.evaluate(input_train, output_train, verbose=1)
-                            test_predict = model.predict(input_test, batch_size=32, verbose=1)
-                            train_predict = model.predict(input_train, batch_size=32, verbose=1)
+                            
+                            save_regression(model, model_name, train_input_std, test_input_std)
+                            
+                            '''
+                            score_test = model.evaluate(test_input, test_output, verbose=1)
+                            score_train = model.evaluate(train_input, train_output, verbose=1)
+                            test_predict = model.predict(test_input, batch_size=32, verbose=1)
+                            train_predict = model.predict(train_input, batch_size=32, verbose=1)
 
                             df_test_pre = pd.DataFrame(test_predict)
                             df_train_pre = pd.DataFrame(train_predict)
 
-                            df_test_param = pd.DataFrame(output_test)
-                            df_train_param = pd.DataFrame(output_train)
+                            df_test_param = pd.DataFrame(test_output)
+                            df_train_param = pd.DataFrame(train_output)
 
                             df_dens_test = pd.concat([df_test_param, df_test_pre], axis=1)
                             df_dens_train = pd.concat([df_train_param, df_train_pre], axis=1)
@@ -850,15 +885,15 @@ for patience_ in [3000]:
 
                             df_dens_test.to_csv('deeplearning/traintest/' + savename + '_test.csv')
                             df_dens_train.to_csv('deeplearning/traintest/' + savename + '_train.csv')
+                            '''
 
-                            model.save('deeplearning/h5/' + savename + '.h5')
+                            model.save('deeplearning/h5/' + model_name + '.h5')
 
-                            print('Test loss:', score_test[0])
-                            print('Test accuracy:', score_test[1])
-
+                            
                             model.summary()
 
-
+                            
+                            '''
                             ### evaluation of deeplearning ###
                             def eval_bydeeplearning(input):
                                 output_predict = model.predict(input, batch_size = 1, verbose= 1)
@@ -868,7 +903,7 @@ for patience_ in [3000]:
 
                             if is_gridsearch == True:
 
-                                output_iter = eval_bydeeplearning(input_iter)
+                                gridsearch_output = eval_bydeeplearning(gridsearch_input)
                                 
                 
                                 print('start the evaluation by deeplearning')
@@ -876,12 +911,12 @@ for patience_ in [3000]:
                                 
                                 start_time = time.time()
                                                            
-                                iter_deeplearning_predict_df = pd.DataFrame(output_iter, columns = output_predict_feature_names)                            
+                                iter_deeplearning_predict_df = pd.DataFrame(gridsearch_output, columns = predict_output_feature_names)                            
                                 iter_deeplearning_predict_df['Tmax'] = iter_deeplearning_predict_df.max(axis=1)
                                 iter_deeplearning_predict_df['Tmin'] = iter_deeplearning_predict_df.min(axis=1)
                                 iter_deeplearning_predict_df['Tdelta'] = iter_deeplearning_predict_df['Tmax'] -  iter_deeplearning_predict_df['Tmin']
 
-                                iter_deeplearning_df = pd.concat([input_iter_std_df, iter_deeplearning_predict_df], axis=1)
+                                iter_deeplearning_df = pd.concat([gridsearch_input_std_df, iter_deeplearning_predict_df], axis=1)
 
                                 end_time = time.time()
 
@@ -895,7 +930,7 @@ for patience_ in [3000]:
                                                     + '_predict.csv')
 
                                 # evaluate by the for - loop     Not use now
-                                '''
+                                
                                 
                                 i=0                            
                                 predict_df = pd.DataFrame()
@@ -942,7 +977,8 @@ for patience_ in [3000]:
                                 end_time = time.time()
                                 total_time = end_time - start_time
                                 print('loop time is ', total_time)
-                                '''
+                                
+                            '''
 
             
         else:
@@ -952,23 +988,23 @@ for patience_ in [3000]:
             for ac_last in [1]:
                 model = get_model(num_layers, layer_size, bn_where, ac_last, keep_prob)
 
-                model.fit(input_train, output_train,
+                model.fit(train_input, train_output,
                           batch_size=batch_size,
                           epochs=epochs,
                           verbose=1,
-                          validation_data=(input_test, output_test),
+                          validation_data=(test_input, test_output),
                           callbacks=[es_cb])
 
-                score_test = model.evaluate(input_test, output_test, verbose=0)
-                score_train = model.evaluate(input_train, output_train, verbose=0)
-                test_predict = model.predict(input_test, batch_size=32, verbose=1)
-                train_predict = model.predict(input_train, batch_size=32, verbose=1)
+                score_test = model.evaluate(test_input, test_output, verbose=0)
+                score_train = model.evaluate(train_input, train_output, verbose=0)
+                test_predict = model.predict(test_input, batch_size=32, verbose=1)
+                train_predict = model.predict(train_input, batch_size=32, verbose=1)
 
                 df_test_pre = pd.DataFrame(test_predict)
                 df_train_pre = pd.DataFrame(train_predict)
 
-                df_test_param = pd.DataFrame(output_test)
-                df_train_param = pd.DataFrame(output_train)
+                df_test_param = pd.DataFrame(test_output)
+                df_train_param = pd.DataFrame(train_output)
 
                 df_dens_test = pd.concat([df_test_param, df_test_pre], axis=1)
                 df_dens_train = pd.concat([df_train_param, df_train_pre], axis=1)
